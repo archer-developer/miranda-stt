@@ -1,0 +1,11 @@
+.env
+.idea
+*.iml
+dist/
+data/
+logs/
+bin/
+/miranda-stt
+
+# Real config files hold deployment-specific values; only config.yaml.dist is tracked.
+config/*.yaml

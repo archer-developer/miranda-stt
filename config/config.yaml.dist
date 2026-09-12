@@ -1,0 +1,42 @@
+# miranda-stt configuration template.
+#
+# This .dist file documents every available field with its built-in default
+# (see internal/config.Default()) and is checked into git; it is never
+# loaded directly. To configure a real deployment, copy it to
+# config/config.yaml and edit only what needs to differ.
+#
+# Secrets themselves never go in a config file — only the *name* of an
+# environment variable to read them from (fields ending in _env). See .env.example.
+
+# Address the Wyoming TCP server listens on.
+# Home Assistant connects here: Settings → Devices & Services → Wyoming Protocol.
+tcp_addr: ":10300"
+
+# Name of the environment variable holding the Google Gemini API key.
+gemini_api_key_env: "GEMINI_API_KEY"
+
+# Gemini model identifier for the Multimodal Live API (BidiGenerateContent, v1beta).
+# gemini-3.5-transcribe-live is a transcription-specific model that returns
+# rolling interimInputTranscription events — verified working as of 2026-09-12.
+gemini_model: "models/gemini-3.5-transcribe-live"
+
+# BCP-47 language codes advertised to Home Assistant.
+languages:
+  - "ru"
+  - "en"
+
+# Directory to write WAV audio dumps for each session.
+# Empty string disables dumps entirely. Enable for wake-word dataset collection.
+# Files are named: {YYYYMMDD_HHMMSS}_{session_id}_{trigger_reason}.wav
+audio_dump_dir: ""
+
+# How long (milliseconds) to wait after audio-stop for Gemini to send
+# ACTIVITY_END / finalInputTranscription. If the timeout fires, the server
+# falls back to the latest interimInputTranscription received so far.
+# 1500ms is sufficient for gemini-3.5-transcribe-live with typical utterances.
+gemini_turn_complete_timeout_ms: 1500
+
+logging:
+  # One of "debug", "info", "warn", "error".
+  # At "debug", verbose per-request logs go to logs/debug.log (not stdout).
+  level: "info"
