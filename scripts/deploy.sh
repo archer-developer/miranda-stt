@@ -1,18 +1,14 @@
 #!/usr/bin/env bash
-# Builds miranda-stt for linux/amd64 and ships the binary plus a systemd
-# --user unit to the target host. config/*.yaml and .env are never touched
-# by this script — they live on the target host and hold real secrets.
-#
-# Usage: MIRANDA_DEPLOY_HOST=user@host ./scripts/deploy.sh
+# Builds miranda-stt for linux/amd64 and ships the binary plus the systemd
+# unit to the server. config.yaml and .env are never touched — they hold
+# server-specific secrets and are managed separately on the target host.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-remote_host="${MIRANDA_DEPLOY_HOST:?set MIRANDA_DEPLOY_HOST, e.g. user@host}"
+remote_host="archer@miranda"
 remote_dir="miranda-stt"
 service_name="miranda-stt"
-binary_name="miranda-stt"
-healthz_port=""  # no HTTP healthz — Wyoming is a TCP service; check via systemctl
-build_out="dist/${binary_name}-linux-amd64"
+build_out="dist/miranda-stt-linux-amd64"
 unit_file="$(mktemp)"
 trap 'rm -f "$unit_file"' EXIT
 
@@ -22,7 +18,7 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o "$build_out" ./cmd/server
 
 cat >"$unit_file" <<EOF
 [Unit]
-Description=${service_name} Wyoming STT server (Gemini backend)
+Description=miranda-stt Wyoming STT server (Gemini backend)
 After=network-online.target
 Wants=network-online.target
 
@@ -39,7 +35,7 @@ WantedBy=default.target
 EOF
 
 echo "==> Uploading binary and systemd unit to ${remote_host}:~/${remote_dir}"
-ssh "$remote_host" "mkdir -p ~/${remote_dir}/data ~/${remote_dir}/logs ~/${remote_dir}/config ~/.config/systemd/user"
+ssh "$remote_host" "mkdir -p ~/${remote_dir}/config ~/${remote_dir}/logs ~/${remote_dir}/data ~/.config/systemd/user"
 scp -q "$build_out" "${remote_host}:~/${remote_dir}/${service_name}.new"
 scp -q "$unit_file" "${remote_host}:~/.config/systemd/user/${service_name}.service"
 
