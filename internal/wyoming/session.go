@@ -304,6 +304,12 @@ func (s *Session) handleTranscribe(ctx context.Context, _ Header) error {
 		reason = triggerHAAudioStop
 
 	case res := <-geminiCh:
+		// Gemini finished before the client sent audio-stop. The audio-reading
+		// goroutine is still consuming from the shared connection — wait for
+		// it to see the client's own audio-stop (or a connection error)
+		// before returning, otherwise it keeps reading concurrently with the
+		// next runOnce() header read and corrupts the Wyoming stream.
+		<-audioStopCh
 		if res.err != nil {
 			return fmt.Errorf("session: gemini: %w", res.err)
 		}
