@@ -225,10 +225,17 @@ func (s *Session) handleTranscribe(ctx context.Context, _ Header) error {
 			}
 
 			// ACTIVITY_END from voice-activity detection means Gemini detected
-			// end of speech. The latest interim transcription is the final result.
+			// end of speech. Prefer deltasBuf (accumulates inputTranscription/
+			// modelTurn text) since it holds the finalized text; fall back to
+			// the latest interim if Gemini never sent a final piece — e.g. for
+			// short utterances that go straight from silence to ACTIVITY_END.
 			if msg.VoiceActivity != nil && msg.VoiceActivity.Type == "ACTIVITY_END" {
-				s.logger.Debug("gemini voice activity end", "latest_interim", latestInterim)
-				geminiCh <- geminiResult{text: latestInterim, reason: triggerGeminiTurnComplete}
+				text := deltasBuf.String()
+				if text == "" {
+					text = latestInterim
+				}
+				s.logger.Debug("gemini voice activity end", "text", text, "latest_interim", latestInterim)
+				geminiCh <- geminiResult{text: text, reason: triggerGeminiTurnComplete}
 				return
 			}
 
