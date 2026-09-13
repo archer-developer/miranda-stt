@@ -13,8 +13,8 @@ package wyoming
 type Header struct {
 	Type          string      `json:"type"`
 	Version       string      `json:"version,omitempty"`
-	Data          interface{} `json:"data,omitempty"`          // legacy inline format
-	DataLength    int         `json:"data_length,omitempty"`   // Wyoming 1.9+
+	Data          interface{} `json:"data,omitempty"`        // legacy inline format
+	DataLength    int         `json:"data_length,omitempty"` // Wyoming 1.9+
 	PayloadLength int         `json:"payload_length,omitempty"`
 }
 

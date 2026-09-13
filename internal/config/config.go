@@ -11,6 +11,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// defaultDebugAudioDumpDir is where WAV dumps land when logging.level is
+// "debug" and audio_dump_dir was not set explicitly.
+const defaultDebugAudioDumpDir = "logs/audio-dumps"
+
 // Config is the root of the service's configuration tree.
 type Config struct {
 	// TCPAddr is the address the Wyoming TCP server listens on.
@@ -22,9 +26,11 @@ type Config struct {
 	// Languages is the list of BCP-47 language codes advertised to Home Assistant.
 	Languages []string `yaml:"languages"`
 	// AudioDumpDir, when non-empty, enables WAV dumps of every session.
+	// If left empty while logging.level is "debug", it defaults to
+	// defaultDebugAudioDumpDir so debug mode always captures audio.
 	AudioDumpDir string `yaml:"audio_dump_dir"`
 	// GeminiTurnCompleteTimeout is the ms to wait for Gemini turn_complete after audio-stop.
-	GeminiTurnCompleteTimeoutMs int `yaml:"gemini_turn_complete_timeout_ms"`
+	GeminiTurnCompleteTimeoutMs int           `yaml:"gemini_turn_complete_timeout_ms"`
 	Logging                     LoggingConfig `yaml:"logging"`
 }
 
@@ -65,6 +71,12 @@ func Load(paths ...string) (Config, error) {
 		if err := yaml.Unmarshal(data, &cfg); err != nil {
 			return cfg, fmt.Errorf("config: parse %s: %w", path, err)
 		}
+	}
+
+	// Debug logging implies collecting a WAV dump of every incoming audio
+	// stream, unless the operator already pointed audio_dump_dir elsewhere.
+	if cfg.Logging.Level == "debug" && cfg.AudioDumpDir == "" {
+		cfg.AudioDumpDir = defaultDebugAudioDumpDir
 	}
 
 	if err := cfg.validate(); err != nil {

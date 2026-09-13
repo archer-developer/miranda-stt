@@ -25,8 +25,12 @@ languages:
   - "ru"
   - "en"
 
-# Directory to write WAV audio dumps for each session.
-# Empty string disables dumps entirely. Enable for wake-word dataset collection.
+# Directory to write WAV audio dumps for each session (one file per incoming
+# audio stream, from audio-start to the end trigger).
+# Empty string means: no dumps at "info"/"warn"/"error" level, but at
+# logging.level "debug" it defaults to logs/audio-dumps/ automatically.
+# Set this explicitly to override that default directory, e.g. for
+# wake-word dataset collection independent of log level.
 # Files are named: {YYYYMMDD_HHMMSS}_{session_id}_{trigger_reason}.wav
 audio_dump_dir: ""
 
@@ -38,5 +42,6 @@ gemini_turn_complete_timeout_ms: 1500
 
 logging:
   # One of "debug", "info", "warn", "error".
-  # At "debug", verbose per-request logs go to logs/debug.log (not stdout).
+  # At "debug", verbose per-request logs go to logs/debug.log (not stdout),
+  # and audio_dump_dir defaults to logs/audio-dumps/ if not set above.
   level: "info"

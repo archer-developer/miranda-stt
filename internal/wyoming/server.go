@@ -11,14 +11,14 @@ import (
 
 // Server listens for Wyoming TCP connections and spawns a Session per client.
 type Server struct {
-	listener    net.Listener
-	logger      *slog.Logger
-	apiKey      string
-	model       string
-	languages   []string
+	listener     net.Listener
+	logger       *slog.Logger
+	apiKey       string
+	model        string
+	languages    []string
 	audioDumpDir string
-	turnTimeout time.Duration
-	sessionSeq  atomic.Uint64
+	turnTimeout  time.Duration
+	sessionSeq   atomic.Uint64
 }
 
 // NewServer creates a Server bound to addr.
@@ -35,13 +35,13 @@ func NewServer(
 		return nil, fmt.Errorf("wyoming/server: listen %s: %w", addr, err)
 	}
 	return &Server{
-		listener:    ln,
-		logger:      logger,
-		apiKey:      apiKey,
-		model:       model,
-		languages:   languages,
+		listener:     ln,
+		logger:       logger,
+		apiKey:       apiKey,
+		model:        model,
+		languages:    languages,
 		audioDumpDir: audioDumpDir,
-		turnTimeout: time.Duration(turnTimeoutMs) * time.Millisecond,
+		turnTimeout:  time.Duration(turnTimeoutMs) * time.Millisecond,
 	}, nil
 }
 

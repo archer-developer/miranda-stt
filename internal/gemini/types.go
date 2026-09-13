@@ -11,13 +11,13 @@ type SetupMessage struct {
 
 // SetupPayload carries session-level configuration.
 type SetupPayload struct {
-	Model                 string             `json:"model"`
-	GenerationConfig      *GenerationConfig  `json:"generation_config,omitempty"`
-	SystemInstruction     *SystemInstruction `json:"system_instruction,omitempty"`
+	Model             string             `json:"model"`
+	GenerationConfig  *GenerationConfig  `json:"generation_config,omitempty"`
+	SystemInstruction *SystemInstruction `json:"system_instruction,omitempty"`
 	// InputAudioTranscription, when set, enables transcription of the
 	// user's input audio. Used by transcription-specific models such as
 	// gemini-3.5-transcribe-live.
-	InputAudioTranscription  *struct{} `json:"input_audio_transcription,omitempty"`
+	InputAudioTranscription *struct{} `json:"input_audio_transcription,omitempty"`
 	// OutputAudioTranscription enables transcription of the model's output.
 	OutputAudioTranscription *struct{} `json:"output_audio_transcription,omitempty"`
 }
@@ -68,11 +68,11 @@ type ClientContent struct {
 // Fields vary by model family:
 //   - Generative models: text deltas in ModelTurn.Parts
 //   - Transcription models (gemini-3.5-transcribe-live):
-//       interimInputTranscription — rolling best-guess, replaced by each event
-//       finalInputTranscription   — final stable result for this speech segment
+//     interimInputTranscription — rolling best-guess, replaced by each event
+//     finalInputTranscription   — final stable result for this speech segment
 type ServerContent struct {
-	ModelTurn                *ModelTurn     `json:"modelTurn,omitempty"`
-	TurnComplete             bool           `json:"turnComplete,omitempty"`
+	ModelTurn                 *ModelTurn     `json:"modelTurn,omitempty"`
+	TurnComplete              bool           `json:"turnComplete,omitempty"`
 	InterimInputTranscription *Transcription `json:"interimInputTranscription,omitempty"`
 	FinalInputTranscription   *Transcription `json:"finalInputTranscription,omitempty"`
 	InputTranscription        *Transcription `json:"inputTranscription,omitempty"`

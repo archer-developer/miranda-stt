@@ -19,7 +19,7 @@ import (
 type triggerReason string
 
 const (
-	triggerHAAudioStop      triggerReason = "ha_audio_stop"
+	triggerHAAudioStop        triggerReason = "ha_audio_stop"
 	triggerGeminiTurnComplete triggerReason = "gemini_turn_complete"
 )
 
@@ -216,7 +216,7 @@ func (s *Session) handleTranscribe(ctx context.Context, _ Header) error {
 	//     b) voiceActivity.type == "ACTIVITY_END" → latest interim is the result.
 	go func() {
 		var deltasBuf strings.Builder // generative model: delta accumulator
-		var latestInterim string       // transcription model: latest rolling result
+		var latestInterim string      // transcription model: latest rolling result
 		for {
 			msg, err := gClient.ReadEvent(ctx)
 			if err != nil {

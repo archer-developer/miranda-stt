@@ -71,8 +71,8 @@ func wavHeader(pcmLen int) []byte {
 
 	// fmt sub-chunk
 	h.WriteString("fmt ")
-	_ = binary.Write(&h, le, uint32(16))             // sub-chunk size
-	_ = binary.Write(&h, le, uint16(1))              // PCM format
+	_ = binary.Write(&h, le, uint32(16)) // sub-chunk size
+	_ = binary.Write(&h, le, uint16(1))  // PCM format
 	_ = binary.Write(&h, le, uint16(numChannels))
 	_ = binary.Write(&h, le, uint32(sampleRate))
 	_ = binary.Write(&h, le, uint32(byteRate))
