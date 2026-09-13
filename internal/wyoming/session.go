@@ -97,17 +97,27 @@ func (s *Session) runOnce(ctx context.Context) error {
 }
 
 func (s *Session) handleDescribe() error {
-	models := make([]STTModel, 0, 1)
 	// Strip the "models/" prefix for the advertised model name.
-	name := strings.TrimPrefix(s.model, "models/")
-	models = append(models, STTModel{Name: name})
+	modelName := strings.TrimPrefix(s.model, "models/")
+	attr := Attribution{Name: "Google", URL: "https://ai.google.dev"}
 
 	info := InfoData{
-		STT: []STTInfo{
+		ASR: []ASRProgram{
 			{
-				Name:      "gemini-live-stt",
-				Languages: s.languages,
-				Models:    models,
+				Name:        "gemini-live-stt",
+				Description: "Gemini Live STT via Multimodal Live API",
+				Attribution: attr,
+				Installed:   true,
+				Languages:   s.languages,
+				Models: []ASRModel{
+					{
+						Name:        modelName,
+						Description: "Gemini transcription model",
+						Attribution: attr,
+						Installed:   true,
+						Languages:   s.languages,
+					},
+				},
 			},
 		},
 	}
