@@ -26,8 +26,13 @@ func NewReader(conn net.Conn) *Reader {
 	return &Reader{r: bufio.NewReader(conn)}
 }
 
-// ReadHeader reads the next JSON header line. Returns io.EOF when the
-// connection is cleanly closed.
+// ReadHeader reads the next Wyoming message header, plus any event data that
+// follows it. Returns io.EOF when the connection is cleanly closed.
+//
+// Wyoming 1.9+ sends event data as a separate chunk of DataLength bytes
+// immediately after the header \n, without a separating newline. This method
+// reads that chunk when DataLength > 0 and stores the parsed JSON in h.Data,
+// so callers see a uniform Header regardless of which wire format was used.
 func (r *Reader) ReadHeader() (Header, error) {
 	line, err := r.r.ReadString('\n')
 	if err != nil {
@@ -46,6 +51,21 @@ func (r *Reader) ReadHeader() (Header, error) {
 	if err := json.Unmarshal([]byte(line), &h); err != nil {
 		return Header{}, fmt.Errorf("wyoming/protocol: parse header %q: %w", line, err)
 	}
+
+	// Wyoming 1.9+: event data follows the header as exactly DataLength bytes
+	// with no intervening newline. Read it and merge into h.Data.
+	if h.DataLength > 0 {
+		dataBytes := make([]byte, h.DataLength)
+		if _, err := io.ReadFull(r.r, dataBytes); err != nil {
+			return Header{}, fmt.Errorf("wyoming/protocol: read event data (%d bytes): %w", h.DataLength, err)
+		}
+		var data interface{}
+		if err := json.Unmarshal(dataBytes, &data); err != nil {
+			return Header{}, fmt.Errorf("wyoming/protocol: parse event data %q: %w", dataBytes, err)
+		}
+		h.Data = data
+	}
+
 	return h, nil
 }
 
@@ -82,20 +102,45 @@ func NewWriter(conn net.Conn) *Writer {
 	return &Writer{conn: conn}
 }
 
-// WriteMessage serialises hdr as JSON followed by '\n'. If payload is
-// non-nil, it is written immediately after.
+// wireHeader is the JSON structure written to the wire.
+// We always emit Wyoming 1.9+ format: event data is sent separately via
+// data_length rather than inlined in the "data" field.
+type wireHeader struct {
+	Type          string `json:"type"`
+	DataLength    int    `json:"data_length,omitempty"`
+	PayloadLength int    `json:"payload_length,omitempty"`
+}
+
+// WriteMessage writes a Wyoming 1.9 message: JSON header line, then event
+// data bytes (if any), then binary payload bytes (if any).
 func (w *Writer) WriteMessage(msgType string, data interface{}, payload []byte) error {
-	h := Header{Type: msgType, Data: data}
-	if len(payload) > 0 {
-		h.PayloadLength = len(payload)
+	var dataBytes []byte
+	if data != nil {
+		var err error
+		dataBytes, err = json.Marshal(data)
+		if err != nil {
+			return fmt.Errorf("wyoming/protocol: marshal data for %s: %w", msgType, err)
+		}
 	}
-	b, err := json.Marshal(h)
+
+	h := wireHeader{
+		Type:          msgType,
+		DataLength:    len(dataBytes),
+		PayloadLength: len(payload),
+	}
+	hBytes, err := json.Marshal(h)
 	if err != nil {
-		return fmt.Errorf("wyoming/protocol: marshal %s: %w", msgType, err)
+		return fmt.Errorf("wyoming/protocol: marshal header for %s: %w", msgType, err)
 	}
-	b = append(b, '\n')
-	if _, err := w.conn.Write(b); err != nil {
+	hBytes = append(hBytes, '\n')
+
+	if _, err := w.conn.Write(hBytes); err != nil {
 		return fmt.Errorf("wyoming/protocol: write %s header: %w", msgType, err)
+	}
+	if len(dataBytes) > 0 {
+		if _, err := w.conn.Write(dataBytes); err != nil {
+			return fmt.Errorf("wyoming/protocol: write %s data: %w", msgType, err)
+		}
 	}
 	if len(payload) > 0 {
 		if _, err := w.conn.Write(payload); err != nil {

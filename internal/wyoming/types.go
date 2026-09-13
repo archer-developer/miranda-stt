@@ -3,11 +3,18 @@
 package wyoming
 
 // Header is the JSON envelope that precedes every Wyoming message on the wire.
-// If PayloadLength > 0, exactly that many bytes of binary payload follow the
-// newline that terminates the header.
+//
+// Wyoming protocol 1.9+ separates event data from the header:
+//   - DataLength > 0: read exactly that many bytes after the \n as event data JSON.
+//   - PayloadLength > 0: read that many bytes of binary payload after the data.
+//
+// Older clients inline event data in the "data" field. Both formats are
+// supported on read; we always write in the 1.9 format.
 type Header struct {
 	Type          string      `json:"type"`
-	Data          interface{} `json:"data,omitempty"`
+	Version       string      `json:"version,omitempty"`
+	Data          interface{} `json:"data,omitempty"`          // legacy inline format
+	DataLength    int         `json:"data_length,omitempty"`   // Wyoming 1.9+
 	PayloadLength int         `json:"payload_length,omitempty"`
 }
 
