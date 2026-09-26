@@ -1,6 +1,7 @@
 .env
 .idea
 *.iml
+.DS_Store
 dist/
 data/
 logs/
