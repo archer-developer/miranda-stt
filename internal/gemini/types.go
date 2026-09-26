@@ -17,9 +17,17 @@ type SetupPayload struct {
 	// InputAudioTranscription, when set, enables transcription of the
 	// user's input audio. Used by transcription-specific models such as
 	// gemini-3.5-transcribe-live.
-	InputAudioTranscription *struct{} `json:"input_audio_transcription,omitempty"`
+	InputAudioTranscription *InputAudioTranscriptionConfig `json:"input_audio_transcription,omitempty"`
 	// OutputAudioTranscription enables transcription of the model's output.
 	OutputAudioTranscription *struct{} `json:"output_audio_transcription,omitempty"`
+}
+
+// InputAudioTranscriptionConfig configures the input transcription feature.
+type InputAudioTranscriptionConfig struct {
+	// LanguageCodes restricts recognition to these BCP-47 language codes
+	// (e.g. "ru", "be", "en"). An empty/omitted list lets Gemini
+	// auto-detect across all supported languages.
+	LanguageCodes []string `json:"language_codes,omitempty"`
 }
 
 // GenerationConfig restricts Gemini to text-only output at zero temperature.

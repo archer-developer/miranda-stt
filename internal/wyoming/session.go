@@ -137,7 +137,7 @@ func (s *Session) handleTranscribe(ctx context.Context, _ Header) error {
 	s.logger.Debug("wyoming ← audio-start")
 
 	// Establish Gemini session
-	gClient, err := gemini.New(ctx, s.apiKey, s.model, s.logger)
+	gClient, err := gemini.New(ctx, s.apiKey, s.model, s.languages, s.logger)
 	if err != nil {
 		return fmt.Errorf("session: connect gemini: %w", err)
 	}

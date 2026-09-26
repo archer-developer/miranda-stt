@@ -25,15 +25,19 @@ const (
 
 // Client manages one Gemini Live API WebSocket session for STT.
 type Client struct {
-	conn   *websocket.Conn
-	model  string
-	logger *slog.Logger
-	debug  bool
+	conn      *websocket.Conn
+	model     string
+	languages []string
+	logger    *slog.Logger
+	debug     bool
 }
 
 // New dials the Gemini Live API and performs the setup handshake.
+// languages, when non-empty, restricts recognition to these BCP-47 codes
+// via input_audio_transcription.language_codes; an empty list lets Gemini
+// auto-detect across all supported languages.
 // Returns when the setupComplete acknowledgement is received.
-func New(ctx context.Context, apiKey, model string, logger *slog.Logger) (*Client, error) {
+func New(ctx context.Context, apiKey, model string, languages []string, logger *slog.Logger) (*Client, error) {
 	url := fmt.Sprintf(endpointFmt, apiKey)
 
 	conn, _, err := websocket.Dial(ctx, url, nil)
@@ -42,10 +46,11 @@ func New(ctx context.Context, apiKey, model string, logger *slog.Logger) (*Clien
 	}
 
 	c := &Client{
-		conn:   conn,
-		model:  model,
-		logger: logger,
-		debug:  logger.Enabled(ctx, slog.LevelDebug),
+		conn:      conn,
+		model:     model,
+		languages: languages,
+		logger:    logger,
+		debug:     logger.Enabled(ctx, slog.LevelDebug),
 	}
 
 	if err := c.sendSetup(ctx); err != nil {
@@ -69,11 +74,12 @@ func (c *Client) sendSetup(ctx context.Context) error {
 	// not modelTurn). Generative models that happen to support
 	// bidiGenerateContent would need the full config, but this service targets
 	// dedicated transcription model IDs.
-	emptyObj := struct{}{}
 	msg := SetupMessage{
 		Setup: SetupPayload{
-			Model:                   c.model,
-			InputAudioTranscription: &emptyObj,
+			Model: c.model,
+			InputAudioTranscription: &InputAudioTranscriptionConfig{
+				LanguageCodes: c.languages,
+			},
 		},
 	}
 	if c.debug {

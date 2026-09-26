@@ -20,9 +20,12 @@ gemini_api_key_env: "GEMINI_API_KEY"
 # rolling interimInputTranscription events — verified working as of 2026-09-12.
 gemini_model: "models/gemini-3.5-transcribe-live"
 
-# BCP-47 language codes advertised to Home Assistant.
+# BCP-47 language codes advertised to Home Assistant and sent to Gemini as
+# input_audio_transcription.language_codes to restrict recognition to these
+# languages (Gemini otherwise auto-detects across all supported languages).
 languages:
   - "ru"
+  - "be"
   - "en"
 
 # Directory to write WAV audio dumps for each session (one file per incoming

@@ -23,7 +23,9 @@ type Config struct {
 	GeminiAPIKeyEnv string `yaml:"gemini_api_key_env"`
 	// GeminiModel is the Gemini model identifier.
 	GeminiModel string `yaml:"gemini_model"`
-	// Languages is the list of BCP-47 language codes advertised to Home Assistant.
+	// Languages is the list of BCP-47 language codes advertised to Home
+	// Assistant and sent to Gemini as input_audio_transcription.language_codes
+	// to restrict what the model will recognize.
 	Languages []string `yaml:"languages"`
 	// AudioDumpDir, when non-empty, enables WAV dumps of every session.
 	// If left empty while logging.level is "debug", it defaults to
@@ -46,7 +48,7 @@ func Default() Config {
 		TCPAddr:                     ":10300",
 		GeminiAPIKeyEnv:             "GEMINI_API_KEY",
 		GeminiModel:                 "models/gemini-3.5-transcribe-live",
-		Languages:                   []string{"ru", "en"},
+		Languages:                   []string{"ru", "be", "en"},
 		AudioDumpDir:                "",
 		GeminiTurnCompleteTimeoutMs: 1500,
 		Logging: LoggingConfig{
